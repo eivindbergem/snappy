@@ -105,10 +105,11 @@ def clean(dry_run):
 @cli.command()
 @click.argument("snapshot")
 @click.argument("dst", type=click.Path())
+@click.option("--soft", "-s", is_flag=True, help="Create symbolic links")
 @assert_init
-def link(snapshot, dst):
+def link(snapshot, dst, soft):
     print("Linking {} to {}...".format(snapshot, dst))
-    load_snapshot(snapshot).link(Path(dst))
+    load_snapshot(snapshot).link(Path(dst), soft)
 
 @cli.command()
 @click.argument("snapshot")

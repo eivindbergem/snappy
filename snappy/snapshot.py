@@ -17,6 +17,7 @@
 import stat
 import json
 import shutil
+import os
 
 from pathlib import Path
 
@@ -133,11 +134,11 @@ class Directory(object):
 
         return cls.from_dict(d)
 
-    def link(self, path):
+    def link(self, path, soft):
         path.mkdir()
 
         for name, item in self.children.items():
-            item.link(path / name)
+            item.link(path / name, soft)
 
     def checkout(self, dst=None, unlink=True):
         if not dst:
@@ -163,10 +164,13 @@ class File(object):
         else:
             return self
 
-    def link(self, path):
+    def link(self, path, soft):
         obj_path = get_object_path(self.file_hash).resolve()
 
-        path.symlink_to(obj_path)
+        if soft:
+            path.symlink_to(obj_path)
+        else:
+            os.link(str(obj_path), str(path))
 
     def remove_object(self):
         remove_object(self.file_hash)
