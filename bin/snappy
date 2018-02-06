@@ -39,7 +39,7 @@ def init():
 
 @cli.command()
 @assert_init
-def list():
+def ls():
     for timestamp, path in list_snapshots():
         dt = datetime.fromtimestamp(timestamp)
         print("{} - {}".format(path.name, dt.strftime(TIME_STR)))
