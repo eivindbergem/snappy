@@ -16,7 +16,9 @@
 
 import hashlib
 import shutil
+import os
 
+from stat import S_IWUSR, S_IWGRP, S_IWOTH
 from pathlib import Path
 
 SNAPPY_DIR = ".snappy"
@@ -52,14 +54,32 @@ def get_string_hash(s):
 def split_hash(h, n=2):
     return h[:n], h[n:]
 
+def addmod(filename, perm):
+    mode = filename.stat().st_mode
+
+    os.chmod(filename, mode|perm)
+
+def rmmod(filename, perm):
+    mode = filename.stat().st_mode
+
+    os.chmod(filename, mode&~perm)
+
+def read_only(filename):
+    rmmod(filename, S_IWUSR|S_IWGRP|S_IWOTH)
+
+def user_write(filename):
+    addmod(filename, S_IWUSR)
+
 def add_file(filename):
     file_hash = get_file_hash(filename)
     pre, rest = split_hash(file_hash)
 
     dst = storage_dir() / pre / rest
-    dst.parent.mkdir(exist_ok=True)
+    if not dst.exists():
+        dst.parent.mkdir(exist_ok=True)
 
-    shutil.copy2(str(filename), str(dst))
+        shutil.copy2(str(filename), str(dst))
+        read_only(dst)
 
     return file_hash
 
@@ -83,6 +103,8 @@ def remove_object(obj):
     pre, rest = split_hash(obj)
 
     path = storage_dir() / pre
+
+    user_write(path / rest)
     (path / rest).unlink()
 
     if is_empty(path):
