@@ -1,6 +1,7 @@
 import os
 import stat
 import json
+import shutil
 
 from pathlib import Path
 
@@ -123,6 +124,19 @@ class Directory(object):
         for name, item in self.children.items():
             item.link(path / name)
 
+    def checkout(self, dst=None, unlink=True):
+        if not dst:
+            dst = Path.cwd()
+
+        dst.mkdir(exist_ok=True)
+
+        if unlink:
+            for path, _ in changes(self):
+                path.unlink()
+
+        for name, item in self.children.items():
+            item.checkout(dst / name, False)
+
 class File(object):
     def __init__(self, st_mtime, file_hash):
         self.st_mtime = st_mtime
@@ -138,6 +152,13 @@ class File(object):
         obj_path = get_object_path(self.file_hash).resolve()
 
         path.symlink_to(obj_path)
+
+    def remove_object(self):
+        remove_object(self.file_hash)
+
+    def checkout(self, dst, unlink=None):
+        shutil.copy2(get_object_path(self.file_hash),
+                     dst)
 
 def ignore_filename():
     return snappy_dir() / IGNORE
@@ -175,17 +196,18 @@ def get_last_snapshot():
         _, path = snapshots[-1]
         return Directory.load(path)
 
-def changes():
-    last_snapshot = get_last_snapshot()
+def changes(snapshot=None):
+    if not snapshot:
+        snapshot = get_last_snapshot()
 
     for path, statinfo in walk(Path(".")):
         state = None
 
         st_mtime = statinfo.st_mtime
 
-        if last_snapshot:
+        if snapshot:
             try:
-                prev = last_snapshot.lookup(path)
+                prev = snapshot.lookup(path)
 
                 if st_mtime > prev.st_mtime:
                     state = "modified"

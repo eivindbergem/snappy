@@ -94,5 +94,29 @@ def link(snapshot, dst):
     print("Linking {} to {}...".format(snapshot, dst))
     load_snapshot(snapshot).link(Path(dst))
 
+@cli.command()
+@click.argument("snapshot")
+@click.argument("dst", required=False, type=click.Path())
+@assert_init
+def checkout(snapshot, dst):
+    modified = list(changes())
+
+    if modified and not dst:
+        print("You have unsaved changes in working dir. "
+              "Please make snapshot before checking out.")
+        return -1
+
+    if dst:
+        dst = Path(dst)
+        unlink = False
+
+        if dst.exists():
+            print("Error: Path '{}' already exists!".format(dst))
+            return -1
+    else:
+        unlink = True
+
+    load_snapshot(snapshot).checkout(dst, unlink)
+
 if __name__ == '__main__':
     cli()
