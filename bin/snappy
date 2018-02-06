@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+from pathlib import Path
+from functools import wraps
+
+from tqdm import tqdm
+import click
+
+from snappy.snapshot import (create_snapshot, list_snapshots, changes,
+                             remove_snapshot, load_snapshot, referenced_objects)
+from snappy.storage import (list_objects, remove_object, snappy_dir)
+from snappy import snappy_init
+
+TIME_STR = '%Y-%m-%d %H:%M:%S'
+
+def assert_init(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        path = snappy_dir()
+
+        if not path.exists():
+            print("No snappy found in {}".format(path))
+            print("Run `snappy init` to set up.")
+
+            return -1
+        else:
+            return fn(*args, **kwargs)
+
+    return wrapper
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+def init():
+    snappy_init()
+
+@cli.command()
+@assert_init
+def list():
+    for timestamp, path in list_snapshots():
+        dt = datetime.fromtimestamp(timestamp)
+        print("{} - {}".format(path.name, dt.strftime(TIME_STR)))
+
+@cli.command()
+@assert_init
+def snapshot():
+    print(create_snapshot())
+
+@cli.command()
+@assert_init
+def diff():
+    print("Changes since last snapshot:\n")
+    for path, state in changes():
+        print("\t{:10} - {}".format(state, path))
+
+@cli.command()
+@click.argument('snapshots', nargs=-1)
+@assert_init
+def rm(snapshots):
+    for snapshot in snapshots:
+        print("Removing {}...".format(snapshot))
+
+        try:
+            remove_snapshot(snapshot)
+        except FileNotFoundError:
+            pass
+
+@cli.command()
+@click.argument('snapshot')
+@assert_init
+def tree(snapshot):
+    print(load_snapshot(snapshot))
+
+@cli.command()
+@click.option("--dry-run", "-d", is_flag=True)
+@assert_init
+def clean(dry_run):
+    unreferenced =  set(list_objects()) - referenced_objects()
+    print("Found {} unreferenced objects".format(len(unreferenced)))
+
+    if not dry_run and unreferenced:
+        print("Removing objects...")
+        for obj in tqdm(unreferenced):
+            remove_object(obj)
+
+@cli.command()
+@click.argument("snapshot")
+@click.argument("dst", type=click.Path())
+@assert_init
+def link(snapshot, dst):
+    print("Linking {} to {}...".format(snapshot, dst))
+    load_snapshot(snapshot).link(Path(dst))
+
+if __name__ == '__main__':
+    cli()
