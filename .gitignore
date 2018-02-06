@@ -1,0 +1,8 @@
+.env
+.snappy
+.DS_Store
+*~
+__pycache__
+*.egg-info
+test
+*.pyc
