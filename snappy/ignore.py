@@ -14,14 +14,14 @@ def parse_lines(lines):
 class IgnoreList(object):
     def __init__(self, filename):
         try:
-            with open(filename) as fd:
+            with filename.open() as fd:
                 self.patterns = [line for line in parse_lines(fd)]
         except FileNotFoundError:
             self.patterns = []
 
     def match(self, path):
         for pattern in self.patterns:
-            if fnmatch(path, pattern):
+            if fnmatch(str(path), pattern):
                 return True
 
     def add_pattern(self, pattern):

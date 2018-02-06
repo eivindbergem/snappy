@@ -16,7 +16,6 @@
 
 import hashlib
 import shutil
-import os
 
 from pathlib import Path
 
@@ -32,7 +31,7 @@ def storage_dir():
 def get_file_hash(filename, blocksize=2**20):
     m = hashlib.sha256()
 
-    with open(filename, "rb", buffering=0) as fd:
+    with filename.open("rb", buffering=0) as fd:
         while True:
             data = fd.read(blocksize)
 
@@ -60,7 +59,7 @@ def add_file(filename):
     dst = storage_dir() / pre / rest
     dst.parent.mkdir(exist_ok=True)
 
-    shutil.copy2(filename, dst)
+    shutil.copy2(str(filename), str(dst))
 
     return file_hash
 
@@ -70,9 +69,9 @@ def get_object_path(obj):
     return storage_dir() / pre / rest
 
 def list_objects():
-    for pre in os.listdir(storage_dir()):
-        for rest in os.listdir(storage_dir() / pre):
-            yield pre + rest
+    for pre in storage_dir().iterdir():
+        for rest in pre.iterdir():
+            yield str(pre.name) + str(rest.name)
 
 def is_empty(path):
     for child in path.iterdir():

@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with snappy.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import stat
 import json
 import shutil
@@ -122,14 +121,14 @@ class Directory(object):
 
         snapshot_hash = get_string_hash(dump.encode("utf-8"))
 
-        with open(snapshot_dir() / snapshot_hash, "w") as fd:
+        with (snapshot_dir() / snapshot_hash).open("w") as fd:
             fd.write(dump)
 
         return snapshot_hash
 
     @classmethod
     def load(cls, path):
-        with open(path) as fd:
+        with path.open() as fd:
             d = json.load(fd)
 
         return cls.from_dict(d)
@@ -183,11 +182,11 @@ def walk(path):
     ignore = IgnoreList(ignore_filename())
     ignore.add_pattern(str(snappy_dir()))
 
-    for name in (Path(item) for item in os.scandir(path)):
+    for name in path.iterdir():
         if ignore.match(name):
             continue
 
-        statinfo = os.stat(name)
+        statinfo = name.stat()
         mode = statinfo.st_mode
 
         if stat.S_ISDIR(mode):
@@ -198,8 +197,8 @@ def walk(path):
 def list_snapshots():
     snapshots = []
 
-    for item in os.scandir(snapshot_dir()):
-        statinfo = os.stat(item)
+    for item in snapshot_dir().iterdir():
+        statinfo = item.stat()
 
         snapshots.append((statinfo.st_mtime, Path(item)))
 
@@ -266,7 +265,7 @@ def create_snapshot():
     return snapshot.save()
 
 def remove_snapshot(snapshot):
-    os.remove(snapshot_dir() / snapshot)
+    (snapshot_dir() / snapshot).unlink()
 
 def load_snapshot(snapshot):
     return Directory.load(snapshot_dir() / snapshot)
