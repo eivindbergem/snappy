@@ -57,12 +57,12 @@ def split_hash(h, n=2):
 def addmod(filename, perm):
     mode = filename.stat().st_mode
 
-    os.chmod(filename, mode|perm)
+    os.chmod(str(filename), mode|perm)
 
 def rmmod(filename, perm):
     mode = filename.stat().st_mode
 
-    os.chmod(filename, mode&~perm)
+    os.chmod(str(filename), mode&~perm)
 
 def read_only(filename):
     rmmod(filename, S_IWUSR|S_IWGRP|S_IWOTH)
@@ -84,7 +84,7 @@ def add_file(filename):
     return file_hash
 
 def copy_object(obj, dst):
-    shutil.copy2(get_object_path(obj), dst)
+    shutil.copy2(str(get_object_path(obj)), str(dst))
     user_write(dst)
 
 def get_object_path(obj):
