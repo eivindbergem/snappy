@@ -21,7 +21,8 @@ import os
 
 from pathlib import Path
 
-from .storage import add_file, snappy_dir, get_string_hash, copy_object
+from .storage import (add_file, snappy_dir, get_string_hash, copy_object,
+                      get_object_path)
 from .ignore import IgnoreList
 
 SNAPSHOTS = "snapshots"
