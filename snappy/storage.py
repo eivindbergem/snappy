@@ -83,6 +83,10 @@ def add_file(filename):
 
     return file_hash
 
+def copy_object(obj, dst):
+    shutil.copy2(get_object_path(obj), dst)
+    user_write(dst)
+
 def get_object_path(obj):
     pre, rest = split_hash(obj)
 

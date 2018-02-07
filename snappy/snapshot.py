@@ -21,7 +21,7 @@ import os
 
 from pathlib import Path
 
-from .storage import add_file, snappy_dir, get_string_hash, get_object_path
+from .storage import add_file, snappy_dir, get_string_hash, copy_object
 from .ignore import IgnoreList
 
 SNAPSHOTS = "snapshots"
@@ -176,8 +176,7 @@ class File(object):
         remove_object(self.file_hash)
 
     def checkout(self, dst, unlink=None):
-        shutil.copy2(get_object_path(self.file_hash),
-                     dst)
+        copy_object(self.file_hash, dst)
 
 def ignore_filename():
     return snappy_dir() / IGNORE
