@@ -54,6 +54,8 @@ def cli():
 
 @cli.command()
 def init():
+    """Initialize snappy"""
+
     snappy_init()
 
 @cli.command()
@@ -61,6 +63,8 @@ def init():
               help="show size of new objects in storage")
 @assert_init
 def ls(size):
+    """List snapshots"""
+
     objs = set([])
 
     for timestamp, path in list_snapshots():
@@ -85,11 +89,15 @@ def ls(size):
 @cli.command()
 @assert_init
 def snapshot():
+    """Take snapshot"""
+
     print(create_snapshot())
 
 @cli.command()
 @assert_init
 def diff():
+    """Show changes since last snapshot"""
+
     print("Changes since last snapshot:\n")
     for path, state in changes():
         print("\t{:10} - {}".format(state, path))
@@ -98,6 +106,8 @@ def diff():
 @click.argument("snapshot")
 @assert_init
 def wipe(snapshot):
+    """Delete snapshots leading up to snapshot"""
+
     if click.confirm('Delete all snapshots leading up to {}'.format(snapshot)):
         try:
             wipe_snapshots(snapshot)
@@ -110,6 +120,8 @@ def wipe(snapshot):
               help="remove preceeding snapshots")
 @assert_init
 def rm(snapshots):
+    """Delete given snapshots"""
+
     for snapshot in snapshots:
         print("Removing {}...".format(snapshot))
 
@@ -122,12 +134,16 @@ def rm(snapshots):
 @click.argument('snapshot')
 @assert_init
 def tree(snapshot):
+    """Show file tree of given snapshot"""
+
     print(load_snapshot(snapshot))
 
 @cli.command()
 @click.option("--dry-run", "-d", is_flag=True)
 @assert_init
 def clean(dry_run):
+    """Delete unreferenced objects"""
+
     unreferenced =  set(list_objects()) - referenced_objects()
     print("Found {} unreferenced objects".format(len(unreferenced)))
 
@@ -142,6 +158,8 @@ def clean(dry_run):
 @click.option("--soft", "-s", is_flag=True, help="Create symbolic links")
 @assert_init
 def link(snapshot, dst, soft):
+    """Link up snapshot"""
+
     print("Linking {} to {}...".format(snapshot, dst))
     load_snapshot(snapshot).link(Path(dst), soft)
 
@@ -150,6 +168,8 @@ def link(snapshot, dst, soft):
 @click.argument("dst", required=False, type=click.Path())
 @assert_init
 def checkout(snapshot, dst):
+    """Checkout snapshot"""
+
     modified = list(changes())
 
     if modified and not dst:
