@@ -41,6 +41,9 @@ def split_path(path):
 class NoSuchFile(Exception):
     pass
 
+class NoSuchSnapshot(Exception):
+    pass
+
 class Directory(object):
     def __init__(self):
         self.children = {}
@@ -284,3 +287,17 @@ def referenced_objects():
             objs.add(f.file_hash)
 
     return objs
+
+def wipe_snapshots(snapshot):
+    snapshots = []
+
+    for _, s in list_snapshots():
+        if snapshot == s.name:
+            break
+
+        snapshots.append(s)
+    else:
+        raise NoSuchSnapshot()
+
+    for s in snapshots:
+        s.unlink()

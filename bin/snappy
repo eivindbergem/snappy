@@ -24,7 +24,8 @@ from tqdm import tqdm
 import click
 
 from snappy.snapshot import (create_snapshot, list_snapshots, changes,
-                             remove_snapshot, load_snapshot, referenced_objects)
+                             remove_snapshot, load_snapshot, referenced_objects,
+                             wipe_snapshots, NoSuchSnapshot)
 from snappy.storage import (list_objects, remove_object, snappy_dir)
 from snappy import snappy_init
 
@@ -73,7 +74,18 @@ def diff():
         print("\t{:10} - {}".format(state, path))
 
 @cli.command()
+@click.argument("snapshot")
+def wipe(snapshot):
+    if click.confirm('Delete all snapshots leading up to {}'.format(snapshot)):
+        try:
+            wipe_snapshots(snapshot)
+        except NoSuchSnapshot:
+            print("Error: Snapshot not found!")
+
+@cli.command()
 @click.argument('snapshots', nargs=-1)
+@click.option("--preceding", "-p", is_flag=True,
+              help="remove preceeding snapshots")
 @assert_init
 def rm(snapshots):
     for snapshot in snapshots:
