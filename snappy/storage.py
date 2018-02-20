@@ -92,6 +92,12 @@ def get_object_path(obj):
 
     return storage_dir() / pre / rest
 
+def get_object_size(obj):
+    path = get_object_path(obj)
+    st = path.stat()
+
+    return st.st_size
+
 def list_objects():
     for pre in storage_dir().iterdir():
         for rest in pre.iterdir():

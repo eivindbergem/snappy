@@ -21,12 +21,14 @@ from pathlib import Path
 from functools import wraps
 
 from tqdm import tqdm
+from humanfriendly import format_size
 import click
 
 from snappy.snapshot import (create_snapshot, list_snapshots, changes,
                              remove_snapshot, load_snapshot, referenced_objects,
-                             wipe_snapshots, NoSuchSnapshot)
-from snappy.storage import (list_objects, remove_object, snappy_dir)
+                             wipe_snapshots, NoSuchSnapshot, Directory)
+from snappy.storage import (list_objects, remove_object, snappy_dir,
+                            get_object_size)
 from snappy import snappy_init
 
 TIME_STR = '%Y-%m-%d %H:%M:%S'
@@ -55,11 +57,30 @@ def init():
     snappy_init()
 
 @cli.command()
+@click.option("--size", "-s", is_flag=True,
+              help="show size of new objects in storage")
 @assert_init
-def ls():
+def ls(size):
+    objs = set([])
+
     for timestamp, path in list_snapshots():
         dt = datetime.fromtimestamp(timestamp)
-        print("{} - {}".format(path.name, dt.strftime(TIME_STR)))
+
+        print("{} - {}".format(path.name, dt.strftime(TIME_STR)),
+              end="")
+
+        if size:
+            new_objs = set(f.file_hash
+                           for f in Directory.load(path).leaves()) - objs
+
+            objs.update(new_objs)
+
+            snapshot_size = sum(get_object_size(obj)
+                                for obj in new_objs)
+
+            print(" - {}".format(format_size(snapshot_size)))
+        else:
+            print()
 
 @cli.command()
 @assert_init
