@@ -96,6 +96,7 @@ def diff():
 
 @cli.command()
 @click.argument("snapshot")
+@assert_init
 def wipe(snapshot):
     if click.confirm('Delete all snapshots leading up to {}'.format(snapshot)):
         try:
