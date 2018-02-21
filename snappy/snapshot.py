@@ -193,7 +193,11 @@ def walk(path):
         if ignore.match(name):
             continue
 
-        statinfo = name.stat()
+        try:
+            statinfo = name.stat()
+        except FileNotFoundError:
+            continue
+
         mode = statinfo.st_mode
 
         if stat.S_ISDIR(mode):
