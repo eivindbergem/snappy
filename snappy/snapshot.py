@@ -169,7 +169,7 @@ class File(object):
             return self
 
     def open(self, mode="r"):
-        return open(get_object_path(self.file_hash), mode)
+        return get_object_path(self.file_hash).open(mode)
 
     def link(self, path, soft):
         obj_path = get_object_path(self.file_hash).resolve()
