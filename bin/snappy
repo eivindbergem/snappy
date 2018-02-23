@@ -26,7 +26,7 @@ import click
 
 from snappy.snapshot import (create_snapshot, list_snapshots, changes,
                              remove_snapshot, load_snapshot, referenced_objects,
-                             wipe_snapshots, NoSuchSnapshot, Directory)
+                             wipe_snapshots, NoSuchSnapshot, Directory, NoSuchFile)
 from snappy.storage import (list_objects, remove_object, snappy_dir,
                             get_object_size)
 from snappy import snappy_init
@@ -188,6 +188,22 @@ def checkout(snapshot, dst):
         unlink = True
 
     load_snapshot(snapshot).checkout(dst, unlink)
+
+@cli.command()
+@click.argument("snapshot")
+@click.argument("filename")
+@assert_init
+def cat(snapshot, filename):
+    """Print contents of filename from snapshot"""
+
+    try:
+        f = load_snapshot(snapshot).lookup(Path(filename))
+    except NoSuchFile:
+        print("Error: No such file in snapshot: '{}'".format(filename))
+        return -1
+
+    with f.open() as fd:
+        print(fd.read(), end="")
 
 if __name__ == '__main__':
     cli()

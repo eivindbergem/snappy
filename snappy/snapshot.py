@@ -164,9 +164,12 @@ class File(object):
 
     def lookup(self, path):
         if len(path.parts) > 0:
-            raise NoSuchFile
+            raise NoSuchFile()
         else:
             return self
+
+    def open(self, mode="r"):
+        return open(get_object_path(self.file_hash), mode)
 
     def link(self, path, soft):
         obj_path = get_object_path(self.file_hash).resolve()
